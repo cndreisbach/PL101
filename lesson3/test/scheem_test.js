@@ -2,7 +2,7 @@ var PEG = require('pegjs')
 var should = require('should')
 var fs = require('fs')
 
-var data = fs.readFileSync('scheem.peg', 'utf-8')
+var data = fs.readFileSync('scheem.pegjs', 'utf-8')
 var parse = PEG.buildParser(data).parse;
 
 describe('The Scheem parser', function() {
