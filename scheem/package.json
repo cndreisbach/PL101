@@ -1,0 +1,10 @@
+{
+  "name": "scheem",
+  "version": "0.1.0",
+  "dependencies": {
+    "pegjs": "*",
+    "mocha": "*",
+    "chai": "*"
+  }
+}
+  
