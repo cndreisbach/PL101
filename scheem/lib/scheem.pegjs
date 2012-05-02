@@ -21,7 +21,7 @@ number
   = number:[0-9]+ { return parseInt(number.join("")); }
     
 valid_char = 
-  [0-9a-zA-Z_?!+-=@#$%^&*/\.]
+  [0-9a-zA-Z_?!+\-><=@#$%^&*/\.]
 
 comment = 
   ";;" (!newline .)* 
