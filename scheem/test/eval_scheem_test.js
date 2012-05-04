@@ -85,6 +85,17 @@ describe("The Scheem interpreter", function() {
     expect(evalScheem("(/ 6 2)")).to.equal(3);
   });
 
+  it("should interpret variadic math", function() {
+    expect(evalScheem("(+ 1 2 3 4)")).to.equal(10);
+    expect(evalScheem("(- 10 5 6)")).to.equal(-1);
+    expect(evalScheem("(* 10 10 5)")).to.equal(500);
+    expect(evalScheem("(/ 27 9 3)")).to.equal(1);
+  });
+
+  it("should handle unary minus", function() {
+    expect(evalScheem("(- 3)")).to.equal(-3);
+  });
+
   it("should evaluate math conditionals", function() {
     expect(evalScheem("(< 2 3)")).to.equal("#t");
     expect(evalScheem("(= 7 3)")).to.equal("#f");

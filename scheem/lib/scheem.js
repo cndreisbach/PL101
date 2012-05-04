@@ -95,6 +95,7 @@ var forms = {
   
   // Variable handling
   define: function(expr, env) {
+    guard.expectCount(2, expr);
     if (typeof env[expr[1]] === "undefined") {
       env[expr[1]] = evalScheem(expr[2], env);
       return env[expr[1]];
@@ -103,6 +104,7 @@ var forms = {
     }
   },
   'set!': function(expr, env) {
+    guard.expectCount(2, expr);
     if (typeof env[expr[1]] !== "undefined") {
       env[expr[1]] = evalScheem(expr[2], env);
       return env[expr[1]];
@@ -113,16 +115,28 @@ var forms = {
 
   // Math
   '+': function(expr, env) {
-    return evalScheem(expr[1], env) + evalScheem(expr[2], env);
+    return mathReduce(function(acc, val) {
+      return acc + val;
+    }, expr.slice(1), env);
   },
   '-': function(expr, env) {
-    return evalScheem(expr[1], env) - evalScheem(expr[2], env);
+    if (expr.length == 2) {
+      return 0 - evalScheem(expr[1], env);
+    } else {
+      return mathReduce(function(acc, val) {
+        return acc - val;
+      }, expr.slice(1), env);
+    }
   },
   '*': function(expr, env) {
-    return evalScheem(expr[1], env) * evalScheem(expr[2], env);
+    return mathReduce(function(acc, val) {
+      return acc * val;
+    }, expr.slice(1), env);
   },
   '/': function(expr, env) {
-    return evalScheem(expr[1], env) / evalScheem(expr[2], env);
+    return mathReduce(function(acc, val) {
+      return acc / val;
+    }, expr.slice(1), env);
   },
   '=': function(expr, env) {
     return bool((evalScheem(expr[1], env) === evalScheem(expr[2], env)));
@@ -141,6 +155,29 @@ var forms = {
   }
 };
 
+var mathReduce = function(fn, coll, env) {
+  return reduce(fn, map(function(val) {
+    return evalScheem(val, env);
+  }, coll));
+};
+
+var map = function(fn, coll) {
+  var i;
+  var newColl = [];
+  for (i = 0; i < coll.length; i++) {
+    newColl[i] = fn(coll[i]);
+  }
+  return newColl;
+};
+
+var reduce = function(fn, coll) {
+  var i;
+  var acc = coll[0];
+  for (i = 1; i < coll.length; i++) {
+    acc = fn(acc, coll[i]);
+  }
+  return acc;
+};
 
 var evalScheem = function(expr, env) {
   // Numbers evaluate to themselves
