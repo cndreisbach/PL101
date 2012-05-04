@@ -19,29 +19,29 @@ var guard = {
   getClass: function(object) {
     return Object.prototype.toString.call(object).match(/^\[object\s(.*)\]$/)[1];
   },
-  
+
   expect: function(cond, message) {
     if (!cond) {
       throw new ScheemError(message);
     }
     return guard;
   },
-  
+
   expectCount: function(count, params) {
     return guard.expect(params.length == count + 1,
                         "" + (params.length - 1) + " params found where " + count + " expected.");
   },
-  
+
   expectMinCount: function(count, params) {
     return guard.expect(params.length >= count + 1,
                         "" + (params.length - 1) + " params found where at least " + count + " expected.");
   },
-  
+
   expectMaxCount: function(count, params) {
     return guard.expect(params.length <= count + 1,
                         "" + (params.length - 1) + " params found where no more than " + count + " expected.");
   },
-  
+
   expectList: function(thing) {
     var thingClass = guard.getClass(thing);
     return guard.expect(thingClass === 'Array',
@@ -78,7 +78,7 @@ var forms = {
       }
     }
   },
-  
+
   // List manipulation
   cons: function(expr, env) {
     guard.expectCount(2, expr).expectList(expr[2]);
@@ -92,7 +92,7 @@ var forms = {
     guard.expectCount(1, expr);
     return evalScheem(expr[1], env).slice(1);
   },
-  
+
   // Variable handling
   define: function(expr, env) {
     guard.expectCount(2, expr);
@@ -115,11 +115,13 @@ var forms = {
 
   // Math
   '+': function(expr, env) {
+    guard.expectMinCount(1, expr);
     return mathReduce(function(acc, val) {
       return acc + val;
     }, expr.slice(1), env);
   },
   '-': function(expr, env) {
+    guard.expectMinCount(1, expr);
     if (expr.length == 2) {
       return 0 - evalScheem(expr[1], env);
     } else {
@@ -129,28 +131,35 @@ var forms = {
     }
   },
   '*': function(expr, env) {
+    guard.expectMinCount(2, expr);
     return mathReduce(function(acc, val) {
       return acc * val;
     }, expr.slice(1), env);
   },
   '/': function(expr, env) {
+    guard.expectMinCount(2, expr);
     return mathReduce(function(acc, val) {
       return acc / val;
     }, expr.slice(1), env);
   },
   '=': function(expr, env) {
+    guard.expectCount(2, expr);
     return bool((evalScheem(expr[1], env) === evalScheem(expr[2], env)));
   },
   '<': function(expr, env) {
+    guard.expectCount(2, expr);
     return bool((evalScheem(expr[1], env) < evalScheem(expr[2], env)));
   },
   '<=': function(expr, env) {
+    guard.expectCount(2, expr);
     return bool((evalScheem(expr[1], env) <= evalScheem(expr[2], env)));
   },
   '>': function(expr, env) {
+    guard.expectCount(2, expr);
     return bool((evalScheem(expr[1], env) > evalScheem(expr[2], env)));
   },
   '>=': function(expr, env) {
+    guard.expectCount(2, expr);
     return bool((evalScheem(expr[1], env) >= evalScheem(expr[2], env)));
   }
 };
