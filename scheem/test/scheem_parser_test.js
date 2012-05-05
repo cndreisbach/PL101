@@ -1,5 +1,5 @@
 var should = require('chai').should();
-var parse = require('../lib/scheem').parse;
+var parse = require('../lib/scheem-parser').parser.parse;
 
 describe('The Scheem parser', function() {
   it('should parse simple lists', function() {

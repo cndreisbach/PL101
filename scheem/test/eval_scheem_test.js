@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 var should = require('chai').should();
-var evalScheem = require("../lib/scheem").eval;
+var evalScheem = require("../lib/scheem").evalScheem;
 
 describe("The Scheem interpreter", function() {
   it("should evaluate blocks using begin", function() {
@@ -76,6 +76,10 @@ describe("The Scheem interpreter", function() {
 
   it("should not allow for var initialization with set!", function() {
     expect(function () { evalScheem("(begin (set! a 42))") }).to.throw();
+  });
+
+  it("should throw an error when using an uninitialized var", function() {
+    expect(function () { evalScheem("(+ a 1)").to.throw(); });
   });
   
   it("should interpret simple math", function() {

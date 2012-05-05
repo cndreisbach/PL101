@@ -1,10 +1,20 @@
 {
   "name": "scheem",
   "version": "0.1.0",
+  "author": "Clinton N. Dreisbach <crnixon@gmail.com>",
+  "main": "./lib/scheem",
   "dependencies": {
     "pegjs": "*",
     "mocha": "*",
     "chai": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "browserify": "*",
+    "grunt": "*",
+    "grunt-css": "*",
+    "grunt-exec": "*"
   }
 }
   
