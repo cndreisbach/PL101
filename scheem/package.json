@@ -4,17 +4,17 @@
   "author": "Clinton N. Dreisbach <crnixon@gmail.com>",
   "main": "./lib/scheem",
   "dependencies": {
-    "pegjs": "*",
-    "mocha": "*",
-    "chai": "*"
+    "pegjs": "*"
   },
   "devDependencies": {
+    "coffee-script": "*",
     "mocha": "*",
     "chai": "*",
     "browserify": "*",
     "grunt": "*",
     "grunt-css": "*",
-    "grunt-exec": "*"
+    "grunt-exec": "*",
+    "grunt-contrib": "*"
   }
 }
   

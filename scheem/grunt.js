@@ -1,11 +1,25 @@
 /*global module:false*/
 module.exports = function(grunt) {
   var fs = require('fs');
+  var file = grunt.file;
+  var log = grunt.log;
+  
   grunt.loadNpmTasks('grunt-css');
   grunt.loadNpmTasks('grunt-exec');
+  grunt.loadNpmTasks('grunt-contrib');
   
   // Project configuration.
   grunt.initConfig({
+    coffee: {
+      compile: {
+        options: {
+          bare: true
+        },
+        files: {
+          'lib/scheem.js': ['lib/scheem.coffee']
+        }
+      }
+    },
     exec: {
       mocha: {
         command: "mocha --no-colors",
@@ -37,14 +51,19 @@ module.exports = function(grunt) {
       files: ['grunt.js', 'lib/scheem.js']
     },
     watch: {
-      files: ['<config:lint.files>', '<config:concat.site.src>', '<config:cssmin.site.src>', 'lib/scheem.pegjs'],
+      files: ['lib/**/*.coffee',
+              'lib/**/*.js',
+              '<config:lint.files>',
+              '<config:concat.site.src>',
+              '<config:cssmin.site.src>',
+              'lib/scheem.pegjs'],
       tasks: 'default'
     },
     jshint: {
       options: {
         curly: true,
         eqeqeq: true,
-        immed: true,
+        immed: false,
         latedef: false,
         newcap: true,
         noarg: true,
@@ -52,7 +71,8 @@ module.exports = function(grunt) {
         undef: true,
         boss: true,
         eqnull: true,
-        node: true
+        node: true,
+        shadow: true
       },
       globals: {}
     }
@@ -61,10 +81,10 @@ module.exports = function(grunt) {
   grunt.registerTask('build-parser', 'Build our parser from its PEG file', function() {
     var PEG = require('pegjs');
 
-    var data = fs.readFileSync(__dirname + '/lib/scheem.pegjs', 'utf-8');
+    var data = file.read(__dirname + '/lib/scheem.pegjs');
     var parser = PEG.buildParser(data, {trackLineAndColumn: true});
 
-    fs.writeFileSync(__dirname + '/lib/scheem-parser.js', "var Scheem = module.exports = {};\n" +
+    file.write(__dirname + '/lib/scheem-parser.js', "var Scheem = module.exports = {};\n" +
                      "Scheem.parser = " + parser.toSource().replace("this.SyntaxError", "Scheem.parser.SyntaxError") + ";\n");
   });
 
@@ -72,12 +92,12 @@ module.exports = function(grunt) {
     var browserify = require('browserify');
     var bundle = browserify('browser.js');
     var src = bundle.bundle();
-    fs.writeFileSync(__dirname + '/site/js/scheem.js', src);
+    file.write(__dirname + '/site/js/scheem.js', src);
   });
 
   grunt.registerTask('test', 'exec:mocha');
   grunt.registerTask('site', 'build-parser browserify concat cssmin');
 
   // Default task.
-  grunt.registerTask('default', 'lint test site');
+  grunt.registerTask('default', 'coffee lint test site');
 };
