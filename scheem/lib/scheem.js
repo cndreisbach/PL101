@@ -34,13 +34,13 @@ Guard = {
     return Guard;
   },
   expectCount: function(count, params) {
-    return Guard.expect(params.length === count, "" + (params.length - 1) + " params found where " + count + " expected.");
+    return Guard.expect(params.length === count, "" + params.length + " params found where " + count + " expected.");
   },
   expectMinCount: function(count, params) {
-    return Guard.expect(params.length >= count, "" + (params.length - 1) + " params found where at least " + count + " expected.");
+    return Guard.expect(params.length >= count, "" + params.length + " params found where at least " + count + " expected.");
   },
   expectMaxCount: function(count, params) {
-    return Guard.expect(params.length <= count, "" + (params.length - 1) + " params found where no more than " + count + " expected.");
+    return Guard.expect(params.length <= count, "" + params.length + " params found where no more than " + count + " expected.");
   },
   expectList: function(thing) {
     var thingClass;
@@ -151,6 +151,28 @@ forms = {
     };
     return evalAST(expr[3], env);
   },
+  "let": function(expr, env) {
+    var assignments, bindings, result, subexpr, x, _i, _j, _len, _ref, _ref1;
+    Guard.expectMinCount(2, expr.slice(1));
+    assignments = expr[1];
+    Guard.expect(function() {
+      return _.isArray(assignments) && assignments.length % 2 === 0;
+    }, "let requires a list of even length for bindings.");
+    bindings = {};
+    for (x = _i = 0, _ref = assignments.length; _i < _ref; x = _i += 2) {
+      bindings[assignments[x]] = assignments[x + 1];
+    }
+    env = {
+      bindings: bindings,
+      outer: env
+    };
+    _ref1 = expr.slice(2);
+    for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+      subexpr = _ref1[_j];
+      result = evalAST(subexpr, env);
+    }
+    return result;
+  },
   'lambda-one': function(expr, env) {
     var _body, _var;
     _var = expr[1];
@@ -185,26 +207,6 @@ forms = {
   "set!": function(expr, env) {
     Guard.expectCount(2, expr.slice(1));
     return update(env, expr[1], evalAST(expr[2], env));
-  },
-  "=": function(expr, env) {
-    Guard.expectCount(2, expr.slice(1));
-    return bool(evalAST(expr[1], env) === evalAST(expr[2], env));
-  },
-  "<": function(expr, env) {
-    Guard.expectCount(2, expr.slice(1));
-    return bool(evalAST(expr[1], env) < evalAST(expr[2], env));
-  },
-  "<=": function(expr, env) {
-    Guard.expectCount(2, expr.slice(1));
-    return bool(evalAST(expr[1], env) <= evalAST(expr[2], env));
-  },
-  ">": function(expr, env) {
-    Guard.expectCount(2, expr.slice(1));
-    return bool(evalAST(expr[1], env) > evalAST(expr[2], env));
-  },
-  ">=": function(expr, env) {
-    Guard.expectCount(2, expr.slice(1));
-    return bool(evalAST(expr[1], env) >= evalAST(expr[2], env));
   }
 };
 
@@ -244,6 +246,36 @@ primitives = {
     return reduce(function(acc, n) {
       return acc / n;
     }, args);
+  },
+  "=": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args);
+    return bool(args[0] === args[1]);
+  },
+  "<": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args);
+    return bool(args[0] < args[1]);
+  },
+  "<=": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args);
+    return bool(args[0] <= args[1]);
+  },
+  ">": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args);
+    return bool(args[0] > args[1]);
+  },
+  ">=": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args);
+    return bool(args[0] >= args[1]);
   }
 };
 

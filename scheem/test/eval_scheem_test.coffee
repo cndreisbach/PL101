@@ -23,17 +23,6 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(if (= 1 1) 1)")).to.equal 1
     expect(evalScheem("(if (= 1 0) 1)")).to.be.a "undefined"
 
-  it "should create a new scope for let-one", ->
-    expect(evalScheem("
-      (begin
-        (define x 1)
-        (let-one x 2 x))")).to.equal 2
-    expect(evalScheem("
-      (begin
-        (define x 1)
-        (let-one x 2 (= x 2))
-        x)")).to.equal 1
-
   it "should have only two or three arguments to if", ->
     expect(->
       evalScheem "(if (= 1 1))"
@@ -124,6 +113,24 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(= 7 3)")).to.equal "#f"
     expect(evalScheem("(> 3 4)")).to.equal "#f"
     expect(evalScheem("(>= 6 6)")).to.equal "#t"
+
+  it "should create a new scope for let-one", ->
+    expect(evalScheem("
+      (begin
+        (define x 1)
+        (let-one x 2 x))")).to.equal 2
+    expect(evalScheem("
+      (begin
+        (define x 1)
+        (let-one x 2 (= x 2))
+        x)")).to.equal 1
+
+  it "should handle let", ->
+    expect(evalScheem("
+      (begin
+        (define x 12)
+        (let (x 7 y 21)
+          (+ x y)))")).to.equal 28
 
   it "should handle function application", ->
     env =

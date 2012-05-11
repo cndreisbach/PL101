@@ -12,17 +12,17 @@ Guard =
     Object::toString.call(object).match(/^\[object\s(.*)\]$/)[1]
 
   expect: (cond, message) ->
-    throw new ScheemError(message)  unless cond
+    throw new ScheemError(message) unless cond
     Guard
 
   expectCount: (count, params) ->
-    Guard.expect params.length is count, "" + (params.length - 1) + " params found where " + count + " expected."
+    Guard.expect params.length is count, "" + params.length + " params found where " + count + " expected."
 
   expectMinCount: (count, params) ->
-    Guard.expect params.length >= count, "" + (params.length - 1) + " params found where at least " + count + " expected."
+    Guard.expect params.length >= count, "" + params.length + " params found where at least " + count + " expected."
 
   expectMaxCount: (count, params) ->
-    Guard.expect params.length <= count, "" + (params.length - 1) + " params found where no more than " + count + " expected."
+    Guard.expect params.length <= count, "" + params.length + " params found where no more than " + count + " expected."
 
   expectList: (thing) ->
     thingClass = Guard.getClass(thing)
@@ -72,8 +72,7 @@ reduce = (fn, coll) ->
 
 forms =
   begin: (expr, env) ->
-    for subexpr in expr[1..]
-      result = evalAST(subexpr, env)
+    result = evalAST(subexpr, env) for subexpr in expr[1..]
     result
 
   quote: (expr, env) ->
@@ -94,6 +93,22 @@ forms =
       bindings: bindings,
       outer: env
     evalAST(expr[3], env)
+
+  let: (expr, env) ->
+    Guard.expectMinCount(2, expr[1..])
+
+    assignments = expr[1]
+    Guard.expect () ->
+      _.isArray(assignments) and assignments.length % 2 is 0
+    , "let requires a list of even length for bindings."
+    bindings = {}
+    for x in [0...assignments.length] by 2
+      bindings[assignments[x]] = assignments[x + 1]
+    env =
+      bindings: bindings
+      outer: env
+    result = evalAST(subexpr, env) for subexpr in expr[2..]
+    result
 
   'lambda-one': (expr, env) ->
     _var = expr[1]
@@ -126,26 +141,6 @@ forms =
     Guard.expectCount 2, expr[1..]
     update(env, expr[1], evalAST(expr[2], env))
 
-  "=": (expr, env) ->
-    Guard.expectCount 2, expr[1..]
-    bool (evalAST(expr[1], env) is evalAST(expr[2], env))
-
-  "<": (expr, env) ->
-    Guard.expectCount 2, expr[1..]
-    bool (evalAST(expr[1], env) < evalAST(expr[2], env))
-
-  "<=": (expr, env) ->
-    Guard.expectCount 2, expr[1..]
-    bool (evalAST(expr[1], env) <= evalAST(expr[2], env))
-
-  ">": (expr, env) ->
-    Guard.expectCount 2, expr[1..]
-    bool (evalAST(expr[1], env) > evalAST(expr[2], env))
-
-  ">=": (expr, env) ->
-    Guard.expectCount 2, expr[1..]
-    bool (evalAST(expr[1], env) >= evalAST(expr[2], env))
-
 primitives =
   "+": (args...) ->
     Guard.expectMinCount 1, args
@@ -173,6 +168,27 @@ primitives =
     reduce (acc, n) ->
       acc / n
     , args
+
+  "=": (args...) ->
+    Guard.expectCount 2, args
+    bool(args[0] is args[1])
+
+  "<": (args...) ->
+    Guard.expectCount 2, args
+    bool(args[0] < args[1])
+
+  "<=": (args...) ->
+    Guard.expectCount 2, args
+    bool(args[0] <= args[1])
+
+  ">": (args...) ->
+    Guard.expectCount 2, args
+    bool (args[0] > args[1])
+
+  ">=": (args...) ->
+    Guard.expectCount 2, args
+    bool (args[0] >= args[1])
+
 
 initialEnv = () ->
   outer: null
