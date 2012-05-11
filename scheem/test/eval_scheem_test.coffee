@@ -24,8 +24,15 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(if (= 1 0) 1)")).to.be.a "undefined"
 
   it "should create a new scope for let-one", ->
-    expect(evalScheem("(begin (define x 1) (let-one x 2 x))")).to.equal 2
-    expect(evalScheem("(begin (define x 1) (let-one x 2 (= x 2)) x)")).to.equal 1
+    expect(evalScheem("
+      (begin
+        (define x 1)
+        (let-one x 2 x))")).to.equal 2
+    expect(evalScheem("
+      (begin
+        (define x 1)
+        (let-one x 2 (= x 2))
+        x)")).to.equal 1
 
   it "should have only two or three arguments to if", ->
     expect(->
@@ -82,7 +89,11 @@ describe "The Scheem interpreter", ->
     ).to.throw()
 
   it "should allow for var redefinition with set!", ->
-    expect(evalScheem("(begin (define a 23) (set! a 42) a)")).to.eql 42
+    expect(evalScheem("
+      (begin
+        (define a 23)
+        (set! a 42)
+        a)")).to.eql 42
 
   it "should not allow for var initialization with set!", ->
     expect(->
@@ -128,4 +139,9 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(begin (define inc (lambda-one x (+ x 1))) (inc 1))")).to.equal 2
 
   it "should handle recursion", ->
-    expect(evalScheem("(begin (define factorial (lambda-one n (if (= n 0) 1 (* n (factorial (- n 1)))))) (factorial 4))")).to.equal 24
+    expect(evalScheem("
+    (begin
+      (define factorial
+        (lambda-one n
+          (if (= n 0) 1 (* n (factorial (- n 1))))))
+      (factorial 4))")).to.equal 24

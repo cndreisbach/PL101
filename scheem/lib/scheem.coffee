@@ -1,5 +1,5 @@
-Scheem = module.exports = {}
-Scheem.Parser = Parser = require("./scheem-parser").parser
+Parser = require("./scheem-parser").parser
+_ = require("underscore")
 
 class ScheemError
   constructor: (@message, @lineno) ->
@@ -7,17 +7,26 @@ class ScheemError
   toString: ->
     "#{@name}: #{@message}"
 
-Scheem.Error = ScheemError
-parse = Parser.parse
+Guard =
+  getClass: (object) ->
+    Object::toString.call(object).match(/^\[object\s(.*)\]$/)[1]
 
-Scheem.evalScheem = evalScheem = (code, env) ->
-  env ?= {bindings: {}, outer: null}
-  try
-    ast = parse(code)
-    return evalAST(ast, env)
-  catch e
-    e.message = "Syntax error at line " + e.line + ", column " + e.column + "."  if e instanceof Parser.SyntaxError
-    throw e
+  expect: (cond, message) ->
+    throw new ScheemError(message)  unless cond
+    Guard
+
+  expectCount: (count, params) ->
+    Guard.expect params.length is count, "" + (params.length - 1) + " params found where " + count + " expected."
+
+  expectMinCount: (count, params) ->
+    Guard.expect params.length >= count, "" + (params.length - 1) + " params found where at least " + count + " expected."
+
+  expectMaxCount: (count, params) ->
+    Guard.expect params.length <= count, "" + (params.length - 1) + " params found where no more than " + count + " expected."
+
+  expectList: (thing) ->
+    thingClass = Guard.getClass(thing)
+    Guard.expect thingClass is "Array", thingClass + " found where a list was expected."
 
 isA = (type) ->
   (expr) ->
@@ -49,39 +58,6 @@ update = (env, sym, val) ->
   else
     throw new ScheemError("Attempt to update uninitialized var #{sym}.")
 
-evalAST = (expr, env) ->
-  if isNumber(expr)
-    expr
-  else if isString(expr)
-    lookup(env, expr)
-  else if isFunction(forms[expr[0]])
-    forms[expr[0]](expr, env)
-  else
-    fn = evalAST(expr[0], env)
-    fn(evalAST(expr[1], env))
-
-Guard =
-  getClass: (object) ->
-    Object::toString.call(object).match(/^\[object\s(.*)\]$/)[1]
-
-  expect: (cond, message) ->
-    throw new ScheemError(message)  unless cond
-    Guard
-
-  expectCount: (count, params) ->
-    Guard.expect params.length is count + 1, "" + (params.length - 1) + " params found where " + count + " expected."
-
-  expectMinCount: (count, params) ->
-    Guard.expect params.length >= count + 1, "" + (params.length - 1) + " params found where at least " + count + " expected."
-
-  expectMaxCount: (count, params) ->
-    Guard.expect params.length <= count + 1, "" + (params.length - 1) + " params found where no more than " + count + " expected."
-
-  expectList: (thing) ->
-    thingClass = Guard.getClass(thing)
-    Guard.expect thingClass is "Array", thingClass + " found where a list was expected."
-
-
 bool = (bool) ->
   (if bool then "#t" else "#f")
 
@@ -94,11 +70,6 @@ reduce = (fn, coll) ->
     acc = fn(acc, thing)
   acc
 
-mathReduce = (fn, coll, env) ->
-  reduce fn, map((val) ->
-    evalAST val, env
-  , coll)
-
 forms =
   begin: (expr, env) ->
     for subexpr in expr[1..]
@@ -106,11 +77,11 @@ forms =
     result
 
   quote: (expr, env) ->
-    Guard.expectCount 1, expr
+    Guard.expectCount 1, expr[1..]
     expr[1]
 
   if: (expr, env) ->
-    Guard.expectMinCount(2, expr).expectMaxCount 3, expr
+    Guard.expectMinCount(2, expr[1..]).expectMaxCount 3, expr[1..]
     if evalAST(expr[1], env) isnt "#f"
       evalAST expr[2], env
     else if expr[3]?
@@ -136,68 +107,99 @@ forms =
       evalAST(_body, env)
 
   cons: (expr, env) ->
-    Guard.expectCount(2, expr).expectList expr[2]
+    Guard.expectCount(2, expr[1..]).expectList expr[2]
     [ evalAST(expr[1], env) ].concat evalAST(expr[2], env)
 
   car: (expr, env) ->
-    Guard.expectCount 1, expr
+    Guard.expectCount 1, expr[1..]
     evalAST(expr[1], env)[0]
 
   cdr: (expr, env) ->
-    Guard.expectCount 1, expr
+    Guard.expectCount 1, expr[1..]
     evalAST(expr[1], env).slice 1
 
   define: (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     define(env, expr[1], evalAST(expr[2], env))
 
   "set!": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     update(env, expr[1], evalAST(expr[2], env))
 
-  "+": (expr, env) ->
-    Guard.expectMinCount 1, expr
-    mathReduce (acc, val) ->
-      acc + val
-    , expr.slice(1), env
-
-  "-": (expr, env) ->
-    Guard.expectMinCount 1, expr
-    if expr.length is 2
-      0 - evalAST(expr[1], env)
-    else
-      mathReduce (acc, val) ->
-        acc - val
-      , expr.slice(1), env
-
-  "*": (expr, env) ->
-    Guard.expectMinCount 2, expr
-    mathReduce (acc, val) ->
-      acc * val
-    , expr.slice(1), env
-
-  "/": (expr, env) ->
-    Guard.expectMinCount 2, expr
-    mathReduce (acc, val) ->
-      acc / val
-    , expr.slice(1), env
-
   "=": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     bool (evalAST(expr[1], env) is evalAST(expr[2], env))
 
   "<": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     bool (evalAST(expr[1], env) < evalAST(expr[2], env))
 
   "<=": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     bool (evalAST(expr[1], env) <= evalAST(expr[2], env))
 
   ">": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     bool (evalAST(expr[1], env) > evalAST(expr[2], env))
 
   ">=": (expr, env) ->
-    Guard.expectCount 2, expr
+    Guard.expectCount 2, expr[1..]
     bool (evalAST(expr[1], env) >= evalAST(expr[2], env))
+
+primitives =
+  "+": (args...) ->
+    Guard.expectMinCount 1, args
+    reduce (acc, n) ->
+      acc + n
+    , args
+
+  "-": (args...) ->
+    Guard.expectMinCount 1, args
+    if args.length is 1
+      0 - args[0]
+    else
+      reduce (acc, n) ->
+        acc - n
+      , args
+
+  "*": (args...) ->
+    Guard.expectMinCount 2, args
+    reduce (acc, n) ->
+      acc * n
+    , args
+
+  "/": (args...) ->
+    Guard.expectMinCount 2, args
+    reduce (acc, n) ->
+      acc / n
+    , args
+
+initialEnv = () ->
+  outer: null
+  bindings: _.clone(primitives)
+
+evalScheem = (code, env) ->
+  env ?= initialEnv()
+  try
+    ast = Parser.parse(code)
+    return evalAST(ast, env)
+  catch e
+    e.message = "Syntax error at line " + e.line + ", column " + e.column + "."  if e instanceof Parser.SyntaxError
+    throw e
+
+evalAST = (expr, env) ->
+  if isNumber(expr)
+    expr
+  else if isString(expr)
+    lookup(env, expr)
+  else if forms[expr[0]]?
+    forms[expr[0]](expr, env)
+  else
+    fn = evalAST(expr[0], env)
+    args = (evalAST(arg, env) for arg in expr[1..])
+    fn(args...)
+
+module.exports =
+  Error: ScheemError
+  Parser: Parser
+  evalScheem: evalScheem

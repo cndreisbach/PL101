@@ -1,8 +1,9 @@
-var Guard, Parser, Scheem, ScheemError, bool, define, evalAST, evalScheem, forms, isA, isFunction, isNumber, isString, lookup, map, mathReduce, parse, reduce, update;
+var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, reduce, update, _,
+  __slice = [].slice;
 
-Scheem = module.exports = {};
+Parser = require("./scheem-parser").parser;
 
-Scheem.Parser = Parser = require("./scheem-parser").parser;
+_ = require("underscore");
 
 ScheemError = (function() {
 
@@ -22,26 +23,29 @@ ScheemError = (function() {
 
 })();
 
-Scheem.Error = ScheemError;
-
-parse = Parser.parse;
-
-Scheem.evalScheem = evalScheem = function(code, env) {
-  var ast;
-  if (env == null) {
-    env = {
-      bindings: {},
-      outer: null
-    };
-  }
-  try {
-    ast = parse(code);
-    return evalAST(ast, env);
-  } catch (e) {
-    if (e instanceof Parser.SyntaxError) {
-      e.message = "Syntax error at line " + e.line + ", column " + e.column + ".";
+Guard = {
+  getClass: function(object) {
+    return Object.prototype.toString.call(object).match(/^\[object\s(.*)\]$/)[1];
+  },
+  expect: function(cond, message) {
+    if (!cond) {
+      throw new ScheemError(message);
     }
-    throw e;
+    return Guard;
+  },
+  expectCount: function(count, params) {
+    return Guard.expect(params.length === count, "" + (params.length - 1) + " params found where " + count + " expected.");
+  },
+  expectMinCount: function(count, params) {
+    return Guard.expect(params.length >= count, "" + (params.length - 1) + " params found where at least " + count + " expected.");
+  },
+  expectMaxCount: function(count, params) {
+    return Guard.expect(params.length <= count, "" + (params.length - 1) + " params found where no more than " + count + " expected.");
+  },
+  expectList: function(thing) {
+    var thingClass;
+    thingClass = Guard.getClass(thing);
+    return Guard.expect(thingClass === "Array", thingClass + " found where a list was expected.");
   }
 };
 
@@ -86,46 +90,6 @@ update = function(env, sym, val) {
   }
 };
 
-evalAST = function(expr, env) {
-  var fn;
-  if (isNumber(expr)) {
-    return expr;
-  } else if (isString(expr)) {
-    return lookup(env, expr);
-  } else if (isFunction(forms[expr[0]])) {
-    return forms[expr[0]](expr, env);
-  } else {
-    fn = evalAST(expr[0], env);
-    return fn(evalAST(expr[1], env));
-  }
-};
-
-Guard = {
-  getClass: function(object) {
-    return Object.prototype.toString.call(object).match(/^\[object\s(.*)\]$/)[1];
-  },
-  expect: function(cond, message) {
-    if (!cond) {
-      throw new ScheemError(message);
-    }
-    return Guard;
-  },
-  expectCount: function(count, params) {
-    return Guard.expect(params.length === count + 1, "" + (params.length - 1) + " params found where " + count + " expected.");
-  },
-  expectMinCount: function(count, params) {
-    return Guard.expect(params.length >= count + 1, "" + (params.length - 1) + " params found where at least " + count + " expected.");
-  },
-  expectMaxCount: function(count, params) {
-    return Guard.expect(params.length <= count + 1, "" + (params.length - 1) + " params found where no more than " + count + " expected.");
-  },
-  expectList: function(thing) {
-    var thingClass;
-    thingClass = Guard.getClass(thing);
-    return Guard.expect(thingClass === "Array", thingClass + " found where a list was expected.");
-  }
-};
-
 bool = function(bool) {
   if (bool) {
     return "#t";
@@ -155,12 +119,6 @@ reduce = function(fn, coll) {
   return acc;
 };
 
-mathReduce = function(fn, coll, env) {
-  return reduce(fn, map(function(val) {
-    return evalAST(val, env);
-  }, coll));
-};
-
 forms = {
   begin: function(expr, env) {
     var result, subexpr, _i, _len, _ref;
@@ -172,11 +130,11 @@ forms = {
     return result;
   },
   quote: function(expr, env) {
-    Guard.expectCount(1, expr);
+    Guard.expectCount(1, expr.slice(1));
     return expr[1];
   },
   "if": function(expr, env) {
-    Guard.expectMinCount(2, expr).expectMaxCount(3, expr);
+    Guard.expectMinCount(2, expr.slice(1)).expectMaxCount(3, expr.slice(1));
     if (evalAST(expr[1], env) !== "#f") {
       return evalAST(expr[2], env);
     } else if (expr[3] != null) {
@@ -209,71 +167,135 @@ forms = {
     };
   },
   cons: function(expr, env) {
-    Guard.expectCount(2, expr).expectList(expr[2]);
+    Guard.expectCount(2, expr.slice(1)).expectList(expr[2]);
     return [evalAST(expr[1], env)].concat(evalAST(expr[2], env));
   },
   car: function(expr, env) {
-    Guard.expectCount(1, expr);
+    Guard.expectCount(1, expr.slice(1));
     return evalAST(expr[1], env)[0];
   },
   cdr: function(expr, env) {
-    Guard.expectCount(1, expr);
+    Guard.expectCount(1, expr.slice(1));
     return evalAST(expr[1], env).slice(1);
   },
   define: function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return define(env, expr[1], evalAST(expr[2], env));
   },
   "set!": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return update(env, expr[1], evalAST(expr[2], env));
   },
-  "+": function(expr, env) {
-    Guard.expectMinCount(1, expr);
-    return mathReduce(function(acc, val) {
-      return acc + val;
-    }, expr.slice(1), env);
-  },
-  "-": function(expr, env) {
-    Guard.expectMinCount(1, expr);
-    if (expr.length === 2) {
-      return 0 - evalAST(expr[1], env);
-    } else {
-      return mathReduce(function(acc, val) {
-        return acc - val;
-      }, expr.slice(1), env);
-    }
-  },
-  "*": function(expr, env) {
-    Guard.expectMinCount(2, expr);
-    return mathReduce(function(acc, val) {
-      return acc * val;
-    }, expr.slice(1), env);
-  },
-  "/": function(expr, env) {
-    Guard.expectMinCount(2, expr);
-    return mathReduce(function(acc, val) {
-      return acc / val;
-    }, expr.slice(1), env);
-  },
   "=": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return bool(evalAST(expr[1], env) === evalAST(expr[2], env));
   },
   "<": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return bool(evalAST(expr[1], env) < evalAST(expr[2], env));
   },
   "<=": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return bool(evalAST(expr[1], env) <= evalAST(expr[2], env));
   },
   ">": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return bool(evalAST(expr[1], env) > evalAST(expr[2], env));
   },
   ">=": function(expr, env) {
-    Guard.expectCount(2, expr);
+    Guard.expectCount(2, expr.slice(1));
     return bool(evalAST(expr[1], env) >= evalAST(expr[2], env));
   }
+};
+
+primitives = {
+  "+": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectMinCount(1, args);
+    return reduce(function(acc, n) {
+      return acc + n;
+    }, args);
+  },
+  "-": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectMinCount(1, args);
+    if (args.length === 1) {
+      return 0 - args[0];
+    } else {
+      return reduce(function(acc, n) {
+        return acc - n;
+      }, args);
+    }
+  },
+  "*": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectMinCount(2, args);
+    return reduce(function(acc, n) {
+      return acc * n;
+    }, args);
+  },
+  "/": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectMinCount(2, args);
+    return reduce(function(acc, n) {
+      return acc / n;
+    }, args);
+  }
+};
+
+initialEnv = function() {
+  return {
+    outer: null,
+    bindings: _.clone(primitives)
+  };
+};
+
+evalScheem = function(code, env) {
+  var ast;
+  if (env == null) {
+    env = initialEnv();
+  }
+  try {
+    ast = Parser.parse(code);
+    return evalAST(ast, env);
+  } catch (e) {
+    if (e instanceof Parser.SyntaxError) {
+      e.message = "Syntax error at line " + e.line + ", column " + e.column + ".";
+    }
+    throw e;
+  }
+};
+
+evalAST = function(expr, env) {
+  var arg, args, fn;
+  if (isNumber(expr)) {
+    return expr;
+  } else if (isString(expr)) {
+    return lookup(env, expr);
+  } else if (forms[expr[0]] != null) {
+    return forms[expr[0]](expr, env);
+  } else {
+    fn = evalAST(expr[0], env);
+    args = (function() {
+      var _i, _len, _ref, _results;
+      _ref = expr.slice(1);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        arg = _ref[_i];
+        _results.push(evalAST(arg, env));
+      }
+      return _results;
+    })();
+    return fn.apply(null, args);
+  }
+};
+
+module.exports = {
+  Error: ScheemError,
+  Parser: Parser,
+  evalScheem: evalScheem
 };

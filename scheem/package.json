@@ -4,7 +4,8 @@
   "author": "Clinton N. Dreisbach <crnixon@gmail.com>",
   "main": "./lib/scheem",
   "dependencies": {
-    "pegjs": "*"
+    "pegjs": "*",
+    "underscore": "*"
   },
   "devDependencies": {
     "coffee-script": "*",
