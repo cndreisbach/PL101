@@ -385,13 +385,13 @@ Scheem.parser = (function(){
       function parse_valid_char() {
         var result0;
         
-        if (/^[0-9a-zA-Z_?!+\-><=@#$%^&*\/.]/.test(input.charAt(pos.offset))) {
+        if (/^[0-9a-zA-Z_?!+><=@#$%^&*\/.\-]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[0-9a-zA-Z_?!+\\-><=@#$%^&*\\/.]");
+            matchFailed("[0-9a-zA-Z_?!+><=@#$%^&*\\/.\\-]");
           }
         }
         return result0;

@@ -1,4 +1,4 @@
-var Guard, Parser, Scheem, ScheemError, bool, evalAST, evalScheem, forms, isA, isFunction, isNumber, isString, map, mathReduce, parse, reduce;
+var Guard, Parser, Scheem, ScheemError, bool, define, evalAST, evalScheem, forms, isA, isFunction, isNumber, isString, lookup, map, mathReduce, parse, reduce, update;
 
 Scheem = module.exports = {};
 
@@ -29,7 +29,10 @@ parse = Parser.parse;
 Scheem.evalScheem = evalScheem = function(code, env) {
   var ast;
   if (env == null) {
-    env = {};
+    env = {
+      bindings: {},
+      outer: null
+    };
   }
   try {
     ast = parse(code);
@@ -54,18 +57,46 @@ isString = isA("string");
 
 isFunction = isA("function");
 
+lookup = function(env, sym) {
+  if (env.bindings[sym] != null) {
+    return env.bindings[sym];
+  } else if (env.outer != null) {
+    return lookup(env.outer, sym);
+  } else {
+    throw new ScheemError("Reference to uninitialized var " + sym + ".");
+  }
+};
+
+define = function(env, sym, val) {
+  if (env.bindings[sym] != null) {
+    throw new ScheemError("Attempt to reinitialize already initialized var " + sym + ".");
+  } else {
+    return env.bindings[sym] = val;
+  }
+};
+
+update = function(env, sym, val) {
+  if (env.bindings[sym] != null) {
+    env.bindings[sym] = val;
+    return null;
+  } else if (env.outer != null) {
+    return update(env.outer, sym, val);
+  } else {
+    throw new ScheemError("Attempt to update uninitialized var " + sym + ".");
+  }
+};
+
 evalAST = function(expr, env) {
+  var fn;
   if (isNumber(expr)) {
     return expr;
   } else if (isString(expr)) {
-    if (env[expr] == null) {
-      throw new ScheemError("Reference to uninitialized variable '" + expr + "'.");
-    }
-    return env[expr];
+    return lookup(env, expr);
   } else if (isFunction(forms[expr[0]])) {
     return forms[expr[0]](expr, env);
   } else {
-    throw new ScheemError("Invalid expr: " + expr);
+    fn = evalAST(expr[0], env);
+    return fn(evalAST(expr[1], env));
   }
 };
 
@@ -152,6 +183,31 @@ forms = {
       return evalAST(expr[3], env);
     }
   },
+  'let-one': function(expr, env) {
+    var bindings;
+    bindings = {};
+    bindings[expr[1]] = evalAST(expr[2], env);
+    env = {
+      bindings: bindings,
+      outer: env
+    };
+    return evalAST(expr[3], env);
+  },
+  'lambda-one': function(expr, env) {
+    var _body, _var;
+    _var = expr[1];
+    _body = expr[2];
+    return function(_arg) {
+      var bindings;
+      bindings = {};
+      bindings[_var] = _arg;
+      env = {
+        bindings: bindings,
+        outer: env
+      };
+      return evalAST(_body, env);
+    };
+  },
   cons: function(expr, env) {
     Guard.expectCount(2, expr).expectList(expr[2]);
     return [evalAST(expr[1], env)].concat(evalAST(expr[2], env));
@@ -166,21 +222,11 @@ forms = {
   },
   define: function(expr, env) {
     Guard.expectCount(2, expr);
-    if (env[expr[1]] != null) {
-      throw new ScheemError("Cannot redefine existing vars. Try set! instead.");
-    } else {
-      env[expr[1]] = evalAST(expr[2], env);
-      return env[expr[1]];
-    }
+    return define(env, expr[1], evalAST(expr[2], env));
   },
   "set!": function(expr, env) {
     Guard.expectCount(2, expr);
-    if (env[expr[1]] != null) {
-      env[expr[1]] = evalAST(expr[2], env);
-      return env[expr[1]];
-    } else {
-      throw new ScheemError("Must define a var before it can be redefined with set!.");
-    }
+    return update(env, expr[1], evalAST(expr[2], env));
   },
   "+": function(expr, env) {
     Guard.expectMinCount(1, expr);

@@ -11,7 +11,7 @@ Scheem.Error = ScheemError
 parse = Parser.parse
 
 Scheem.evalScheem = evalScheem = (code, env) ->
-  env ?= {}
+  env ?= {bindings: {}, outer: null}
   try
     ast = parse(code)
     return evalAST(ast, env)
@@ -26,17 +26,39 @@ isNumber = isA("number")
 isString = isA("string")
 isFunction = isA("function")
 
+lookup = (env, sym) ->
+  if env.bindings[sym]?
+    env.bindings[sym]
+  else if env.outer?
+    lookup(env.outer, sym)
+  else
+    throw new ScheemError("Reference to uninitialized var #{sym}.")
+
+define = (env, sym, val) ->
+  if env.bindings[sym]?
+    throw new ScheemError("Attempt to reinitialize already initialized var #{sym}.")
+  else
+    env.bindings[sym] = val
+
+update = (env, sym, val) ->
+  if env.bindings[sym]?
+    env.bindings[sym] = val
+    null
+  else if env.outer?
+    update(env.outer, sym, val)
+  else
+    throw new ScheemError("Attempt to update uninitialized var #{sym}.")
+
 evalAST = (expr, env) ->
   if isNumber(expr)
     expr
   else if isString(expr)
-    unless env[expr]?
-      throw new ScheemError("Reference to uninitialized variable '" + expr + "'.")
-    env[expr]
+    lookup(env, expr)
   else if isFunction(forms[expr[0]])
     forms[expr[0]](expr, env)
   else
-    throw new ScheemError("Invalid expr: " + expr)
+    fn = evalAST(expr[0], env)
+    fn(evalAST(expr[1], env))
 
 Guard =
   getClass: (object) ->
@@ -94,6 +116,25 @@ forms =
     else if expr[3]?
       evalAST expr[3], env
 
+  'let-one': (expr, env) ->
+    bindings = {}
+    bindings[expr[1]] = evalAST(expr[2], env)
+    env =
+      bindings: bindings,
+      outer: env
+    evalAST(expr[3], env)
+
+  'lambda-one': (expr, env) ->
+    _var = expr[1]
+    _body = expr[2]
+    (_arg) ->
+      bindings = {}
+      bindings[_var] = _arg
+      env =
+        bindings: bindings,
+        outer: env
+      evalAST(_body, env)
+
   cons: (expr, env) ->
     Guard.expectCount(2, expr).expectList expr[2]
     [ evalAST(expr[1], env) ].concat evalAST(expr[2], env)
@@ -108,19 +149,11 @@ forms =
 
   define: (expr, env) ->
     Guard.expectCount 2, expr
-    if env[expr[1]]?
-      throw new ScheemError("Cannot redefine existing vars. Try set! instead.")
-    else
-      env[expr[1]] = evalAST(expr[2], env)
-      env[expr[1]]
+    define(env, expr[1], evalAST(expr[2], env))
 
   "set!": (expr, env) ->
     Guard.expectCount 2, expr
-    if env[expr[1]]?
-      env[expr[1]] = evalAST(expr[2], env)
-      env[expr[1]]
-    else
-      throw new ScheemError("Must define a var before it can be redefined with set!.")
+    update(env, expr[1], evalAST(expr[2], env))
 
   "+": (expr, env) ->
     Guard.expectMinCount 1, expr

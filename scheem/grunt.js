@@ -22,7 +22,7 @@ module.exports = function(grunt) {
     },
     exec: {
       mocha: {
-        command: "mocha --no-colors",
+        command: "mocha --no-colors --compilers coffee:coffee-script",
         stdout: true,
         stderr: true
       }
@@ -95,9 +95,9 @@ module.exports = function(grunt) {
     file.write(__dirname + '/site/js/scheem.js', src);
   });
 
-  grunt.registerTask('test', 'exec:mocha');
-  grunt.registerTask('site', 'build-parser browserify concat cssmin');
+  grunt.registerTask('test', 'build-parser coffee lint exec:mocha');
+  grunt.registerTask('site', 'browserify concat cssmin');
 
   // Default task.
-  grunt.registerTask('default', 'coffee lint test site');
+  grunt.registerTask('default', 'test');
 };

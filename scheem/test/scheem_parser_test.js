@@ -39,5 +39,9 @@ describe('The Scheem parser', function() {
       ["+", 1, 1]
     )
   });
+
+  it("should handle atoms with dashes", function() {
+    parse("(test-word)").should.eql(["test-word"]);
+  });
 });
 
