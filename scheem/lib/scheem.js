@@ -188,6 +188,30 @@ forms = {
       return evalAST(_body, env);
     };
   },
+  lambda: function(expr, env) {
+    var _body, _vars;
+    _vars = expr[1];
+    _body = expr.slice(2);
+    return function() {
+      var bindings, result, subexpr, _arg, _args, _i, _j, _len, _len1, _ref, _ref1, _var;
+      _args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      bindings = {};
+      _ref = _.zip(_vars, _args);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _ref1 = _ref[_i], _var = _ref1[0], _arg = _ref1[1];
+        bindings[_var] = _arg;
+      }
+      env = {
+        bindings: bindings,
+        outer: env
+      };
+      for (_j = 0, _len1 = _body.length; _j < _len1; _j++) {
+        subexpr = _body[_j];
+        result = evalAST(subexpr, env);
+      }
+      return result;
+    };
+  },
   cons: function(expr, env) {
     Guard.expectCount(2, expr.slice(1)).expectList(expr[2]);
     return [evalAST(expr[1], env)].concat(evalAST(expr[2], env));

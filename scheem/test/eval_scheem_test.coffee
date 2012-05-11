@@ -145,6 +145,18 @@ describe "The Scheem interpreter", ->
   it "should handle lambda-one definition", ->
     expect(evalScheem("(begin (define inc (lambda-one x (+ x 1))) (inc 1))")).to.equal 2
 
+  it "should handle lambda definitions", ->
+    expect(evalScheem("
+      (begin
+        (define inc (lambda (x) (+ x 1)))
+        (inc 1))")).to.equal 2
+
+    expect(evalScheem("
+      (begin
+        (define sum (lambda (x y) (+ x y)))
+        (sum 2 3))")).to.equal 5
+
+
   it "should handle recursion", ->
     expect(evalScheem("
     (begin

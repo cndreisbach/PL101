@@ -121,6 +121,20 @@ forms =
         outer: env
       evalAST(_body, env)
 
+  lambda: (expr, env) ->
+    _vars = expr[1]
+    _body = expr[2..]
+    (_args...) ->
+      bindings = {}
+
+      for [_var, _arg] in _.zip(_vars, _args)
+        bindings[_var] = _arg
+      env =
+        bindings: bindings
+        outer: env
+      result = evalAST(subexpr, env) for subexpr in _body
+      result
+
   cons: (expr, env) ->
     Guard.expectCount(2, expr[1..]).expectList expr[2]
     [ evalAST(expr[1], env) ].concat evalAST(expr[2], env)
