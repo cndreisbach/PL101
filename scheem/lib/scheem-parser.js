@@ -253,15 +253,11 @@ Scheem.parser = (function(){
         if (result0 !== null) {
           result1 = parse__();
           if (result1 !== null) {
+            result2 = [];
             result3 = parse_form();
-            if (result3 !== null) {
-              result2 = [];
-              while (result3 !== null) {
-                result2.push(result3);
-                result3 = parse_form();
-              }
-            } else {
-              result2 = null;
+            while (result3 !== null) {
+              result2.push(result3);
+              result3 = parse_form();
             }
             if (result2 !== null) {
               if (input.charCodeAt(pos.offset) === 41) {

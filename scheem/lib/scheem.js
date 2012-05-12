@@ -141,16 +141,6 @@ forms = {
       return evalAST(expr[3], env);
     }
   },
-  'let-one': function(expr, env) {
-    var bindings;
-    bindings = {};
-    bindings[expr[1]] = evalAST(expr[2], env);
-    env = {
-      bindings: bindings,
-      outer: env
-    };
-    return evalAST(expr[3], env);
-  },
   "let": function(expr, env) {
     var assignments, bindings, result, subexpr, x, _i, _j, _len, _ref, _ref1;
     Guard.expectMinCount(2, expr.slice(1));
@@ -172,21 +162,6 @@ forms = {
       result = evalAST(subexpr, env);
     }
     return result;
-  },
-  'lambda-one': function(expr, env) {
-    var _body, _var;
-    _var = expr[1];
-    _body = expr[2];
-    return function(_arg) {
-      var bindings;
-      bindings = {};
-      bindings[_var] = _arg;
-      env = {
-        bindings: bindings,
-        outer: env
-      };
-      return evalAST(_body, env);
-    };
   },
   lambda: function(expr, env) {
     var _body, _vars;
@@ -212,18 +187,6 @@ forms = {
       return result;
     };
   },
-  cons: function(expr, env) {
-    Guard.expectCount(2, expr.slice(1)).expectList(expr[2]);
-    return [evalAST(expr[1], env)].concat(evalAST(expr[2], env));
-  },
-  car: function(expr, env) {
-    Guard.expectCount(1, expr.slice(1));
-    return evalAST(expr[1], env)[0];
-  },
-  cdr: function(expr, env) {
-    Guard.expectCount(1, expr.slice(1));
-    return evalAST(expr[1], env).slice(1);
-  },
   define: function(expr, env) {
     Guard.expectCount(2, expr.slice(1));
     return define(env, expr[1], evalAST(expr[2], env));
@@ -235,6 +198,37 @@ forms = {
 };
 
 primitives = {
+  "alert": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    if (window.alert != null) {
+      return alert(args.join(", "));
+    } else {
+      return primitives.puts.apply(primitives, args);
+    }
+  },
+  "puts": function() {
+    var arg, args, _i, _len, _results;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    _results = [];
+    for (_i = 0, _len = args.length; _i < _len; _i++) {
+      arg = args[_i];
+      _results.push(console.log(arg));
+    }
+    return _results;
+  },
+  "length": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(1, args);
+    return args[0].length;
+  },
+  "empty?": function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(1, args);
+    return bool(args[0].length === 0);
+  },
   "+": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -300,6 +294,24 @@ primitives = {
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
     return bool(args[0] >= args[1]);
+  },
+  cons: function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(2, args).expectList(args[1]);
+    return [args[0]].concat(args[1]);
+  },
+  car: function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(1, args).expectList(args[0]);
+    return args[0][0];
+  },
+  cdr: function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    Guard.expectCount(1, args).expectList(args[0]);
+    return args[0].slice(1);
   }
 };
 

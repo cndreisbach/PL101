@@ -86,14 +86,6 @@ forms =
     else if expr[3]?
       evalAST expr[3], env
 
-  'let-one': (expr, env) ->
-    bindings = {}
-    bindings[expr[1]] = evalAST(expr[2], env)
-    env =
-      bindings: bindings,
-      outer: env
-    evalAST(expr[3], env)
-
   let: (expr, env) ->
     Guard.expectMinCount(2, expr[1..])
 
@@ -110,17 +102,6 @@ forms =
     result = evalAST(subexpr, env) for subexpr in expr[2..]
     result
 
-  'lambda-one': (expr, env) ->
-    _var = expr[1]
-    _body = expr[2]
-    (_arg) ->
-      bindings = {}
-      bindings[_var] = _arg
-      env =
-        bindings: bindings,
-        outer: env
-      evalAST(_body, env)
-
   lambda: (expr, env) ->
     _vars = expr[1]
     _body = expr[2..]
@@ -135,18 +116,6 @@ forms =
       result = evalAST(subexpr, env) for subexpr in _body
       result
 
-  cons: (expr, env) ->
-    Guard.expectCount(2, expr[1..]).expectList expr[2]
-    [ evalAST(expr[1], env) ].concat evalAST(expr[2], env)
-
-  car: (expr, env) ->
-    Guard.expectCount 1, expr[1..]
-    evalAST(expr[1], env)[0]
-
-  cdr: (expr, env) ->
-    Guard.expectCount 1, expr[1..]
-    evalAST(expr[1], env).slice 1
-
   define: (expr, env) ->
     Guard.expectCount 2, expr[1..]
     define(env, expr[1], evalAST(expr[2], env))
@@ -156,6 +125,24 @@ forms =
     update(env, expr[1], evalAST(expr[2], env))
 
 primitives =
+  "alert": (args...) ->
+    if window.alert?
+      alert(args.join(", "))
+    else
+      primitives.puts(args...)
+
+  "puts": (args...) ->
+    for arg in args
+      console.log(arg)
+
+  "length": (args...) ->
+    Guard.expectCount 1, args
+    args[0].length
+
+  "empty?": (args...) ->
+    Guard.expectCount 1, args
+    bool(args[0].length is 0)
+
   "+": (args...) ->
     Guard.expectMinCount 1, args
     reduce (acc, n) ->
@@ -203,6 +190,17 @@ primitives =
     Guard.expectCount 2, args
     bool (args[0] >= args[1])
 
+  cons: (args...) ->
+    Guard.expectCount(2, args).expectList args[1]
+    [args[0]].concat args[1]
+
+  car: (args...) ->
+    Guard.expectCount(1, args).expectList args[0]
+    args[0][0]
+
+  cdr: (args...) ->
+    Guard.expectCount(1, args).expectList args[0]
+    args[0][1..]
 
 initialEnv = () ->
   outer: null

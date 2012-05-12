@@ -114,17 +114,6 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(> 3 4)")).to.equal "#f"
     expect(evalScheem("(>= 6 6)")).to.equal "#t"
 
-  it "should create a new scope for let-one", ->
-    expect(evalScheem("
-      (begin
-        (define x 1)
-        (let-one x 2 x))")).to.equal 2
-    expect(evalScheem("
-      (begin
-        (define x 1)
-        (let-one x 2 (= x 2))
-        x)")).to.equal 1
-
   it "should handle let", ->
     expect(evalScheem("
       (begin
@@ -142,9 +131,6 @@ describe "The Scheem interpreter", ->
 
     expect(evalScheem("(inc 2)", env)).to.equal 3
 
-  it "should handle lambda-one definition", ->
-    expect(evalScheem("(begin (define inc (lambda-one x (+ x 1))) (inc 1))")).to.equal 2
-
   it "should handle lambda definitions", ->
     expect(evalScheem("
       (begin
@@ -157,10 +143,41 @@ describe "The Scheem interpreter", ->
         (sum 2 3))")).to.equal 5
 
 
+
+describe "lambda", ->
+  it "should handle calling anonymous functions", ->
+    expect(evalScheem("((lambda (x) (+ x x)) 27)")).to.equal 54
+
+  it "should handle passing functions to functions", ->
+    expect(evalScheem("
+      (begin
+        (define reduce (lambda (fn coll)
+          (if (empty? coll)
+            0
+            (if (= (length coll) 1)
+              (car coll)
+              (fn (reduce fn (cdr coll)) (car coll))))))
+        (define sum (lambda (x y) (+ x y)))
+        (reduce sum '(1 2 3 4)))")).to.equal 10
+
+  it "can shadow global vars", ->
+    expect(evalScheem("(begin
+                         (define x 10)
+                         (define plus10 (lambda (x) (+ x 10)))
+                         (plus10 1))")).to.equal 11
+
+  it "can modify global vars", ->
+    expect(evalScheem("(begin
+                         (define x 0)
+                         (define counter (lambda () (set! x (+ x 1)) x))
+                         (counter)
+                         (counter)
+                         (counter))")).to.equal 3
+
   it "should handle recursion", ->
     expect(evalScheem("
     (begin
       (define factorial
-        (lambda-one n
+        (lambda (n)
           (if (= n 0) 1 (* n (factorial (- n 1))))))
       (factorial 4))")).to.equal 24

@@ -10,7 +10,7 @@ atom
   / chars:valid_char+ _ { return chars.join(""); }
         
 expression =
-  "(" _ forms:form+ ")" _
+  "(" _ forms:form* ")" _
     { return forms; }
 
 quoted_expression =
