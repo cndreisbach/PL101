@@ -345,30 +345,16 @@ exports.extname = function(path) {
 });
 
 require.define("/lib/scheem.js", function (require, module, exports, __dirname, __filename) {
-var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, reduce, update, _,
+var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
   __slice = [].slice;
 
 Parser = require("./scheem-parser").parser;
 
+ScheemError = require("./scheem/error");
+
+print = require("./scheem/print");
+
 _ = require("underscore");
-
-ScheemError = (function() {
-
-  ScheemError.name = 'ScheemError';
-
-  function ScheemError(message, lineno) {
-    this.message = message;
-    this.lineno = lineno;
-    this.name = "ScheemError";
-  }
-
-  ScheemError.prototype.toString = function() {
-    return "" + this.name + ": " + this.message;
-  };
-
-  return ScheemError;
-
-})();
 
 Guard = {
   getClass: function(object) {
@@ -659,6 +645,11 @@ primitives = {
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(1, args).expectList(args[0]);
     return args[0].slice(1);
+  },
+  list: function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    return args;
   }
 };
 
@@ -712,6 +703,7 @@ evalAST = function(expr, env) {
 module.exports = {
   Error: ScheemError,
   Parser: Parser,
+  print: print,
   evalScheem: evalScheem
 };
 
@@ -1363,6 +1355,64 @@ Scheem.parser = (function(){
   return result;
 })();
 
+});
+
+require.define("/lib/scheem/error.js", function (require, module, exports, __dirname, __filename) {
+ScheemError = (function() {
+
+  ScheemError.name = 'ScheemError';
+
+  function ScheemError(message, lineno) {
+    this.message = message;
+    this.lineno = lineno;
+    this.name = "ScheemError";
+  }
+
+  ScheemError.prototype.toString = function() {
+    return "" + this.name + ": " + this.message;
+  };
+
+  return ScheemError;
+
+})();
+module.exports = ScheemError;
+});
+
+require.define("/lib/scheem/print.js", function (require, module, exports, __dirname, __filename) {
+ScheemError = require("./error");
+_ = require("underscore");
+isArray = function(thing) {
+  var internalClass;
+  internalClass = Object.prototype.toString.call(thing).match(/\[object\s(\w+)\]/).toLowerCase();
+  return internalClass === "array";
+};
+print = function(thing) {
+  switch (typeof thing) {
+    case "number":
+      return thing.toString();
+    case "string":
+      return "'" + thing;
+    case "boolean":
+      if (thing) {
+        return "#t";
+      } else {
+        return "#f";
+      }
+      break;
+    case "object":
+      if (thing.length != null) {
+        return "(list " + (_(thing).map(function(x) {
+          return print(x);
+        }).join(' ')) + ")";
+      } else {
+        throw new ScheemError("I don't know how to print " + thing + ".");
+      }
+      break;
+    default:
+      throw new ScheemError("I don't know how to print " + thing + ".");
+  }
+};
+module.exports = print;
 });
 
 require.define("/node_modules/underscore/package.json", function (require, module, exports, __dirname, __filename) {

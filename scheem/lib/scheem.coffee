@@ -1,11 +1,7 @@
 Parser = require("./scheem-parser").parser
+ScheemError = require("./scheem/error")
+print = require("./scheem/print")
 _ = require("underscore")
-
-class ScheemError
-  constructor: (@message, @lineno) ->
-    @name = "ScheemError"
-  toString: ->
-    "#{@name}: #{@message}"
 
 Guard =
   getClass: (object) ->
@@ -202,6 +198,9 @@ primitives =
     Guard.expectCount(1, args).expectList args[0]
     args[0][1..]
 
+  list: (args...) ->
+    args
+
 initialEnv = () ->
   outer: null
   bindings: _.clone(primitives)
@@ -230,4 +229,5 @@ evalAST = (expr, env) ->
 module.exports =
   Error: ScheemError
   Parser: Parser
+  print: print
   evalScheem: evalScheem

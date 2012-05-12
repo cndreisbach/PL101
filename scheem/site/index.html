@@ -26,6 +26,8 @@
               <li><a href="#" class="example-link" rel="math-example">More complex math</a></li>
               <li><a href="#" class="example-link" rel="vars-example">Programming with vars</a></li>
               <li><a href="#" class="example-link" rel="branching-example">Branching with <code>if</code></a></li>
+              <li><a href="#" class="example-link" rel="lambda-example">Creating functions with <code>lambda</code></a></li>
+              <li><a href="#" class="example-link" rel="advanced-lambda-example">Functions that take other functions as arguments</a></li>
             </ul>
           </div>
         </div>
@@ -57,13 +59,30 @@
       (define age 35)
       ;; An if form in Scheem takes three arguments. The first is the predicate: a form that evaluates to true or false. The second form is executed if the predicate is true and the third form is executed if the predicate if false.
       (if (< age 30)
-          -1
+          'young
           ;; if is one form, so it can be used to create the true or false branches of other if statements, creating a branching tree.
           (if (= age 30)
-              0
+              'just-right
               ;; if does not require a false branch. If you do not include one and the predicate is false, nil is returned.
               (if (> age 30)
-                  1))))
+                  'old))))
+    </script>
+    <script type="text/scheem" id="lambda-example">
+      ;; To make functions in Scheem, we use the lambda special form.
+      (begin
+        (define square (lambda (x) (* x x)))
+        (square 4))
+    </script>
+    <script type="text/scheem" id="advanced-lambda-example">
+      ;; Scheem functions can even take other functions as arguments. Can you figure out how the following works?
+      (begin
+        (define square (lambda (x) (* x x)))
+        (define map
+          (lambda (fn coll)
+            (if (empty? coll)
+              (list)
+              (cons (fn (car coll)) (map fn (cdr coll))))))
+        (map square '(1 2 3 4)))
     </script>
   </body>
 </html>

@@ -1,6 +1,8 @@
 expect = require("chai").expect
 should = require("chai").should()
-evalScheem = require("../lib/scheem").evalScheem
+Scheem = require("../lib/scheem")
+evalScheem = Scheem.evalScheem
+printScheem = Scheem.print
 
 describe "The Scheem interpreter", ->
   it "should evaluate blocks using begin", ->
@@ -160,6 +162,17 @@ describe "lambda", ->
         (define sum (lambda (x y) (+ x y)))
         (reduce sum '(1 2 3 4)))")).to.equal 10
 
+  it "should be able to define reduce", ->
+    expect(evalScheem("
+      (begin
+        (define square (lambda (x) (* x x)))
+        (define map
+          (lambda (fn coll)
+            (if (empty? coll)
+              '()
+              (cons (fn (car coll)) (map fn (cdr coll))))))
+        (map square '(1 2 3 4)))")).to.eql [1, 4, 9, 16]
+
   it "can shadow global vars", ->
     expect(evalScheem("(begin
                          (define x 10)
@@ -181,3 +194,18 @@ describe "lambda", ->
         (lambda (n)
           (if (= n 0) 1 (* n (factorial (- n 1))))))
       (factorial 4))")).to.equal 24
+
+describe "The printer", ->
+  it "should print numbers as numbers", ->
+    expect(printScheem(1)).to.eql "1"
+    expect(printScheem(3.14)).to.eql "3.14"
+
+  it "should print arrays as lists", ->
+    expect(printScheem([1, 2, 3])).to.eql "(list 1 2 3)"
+
+  it "should print true and false correctly", ->
+    expect(printScheem(true)).to.eql "#t"
+    expect(printScheem(false)).to.eql "#f"
+
+  it "should print barewords as quoted symbols", ->
+    expect(printScheem("test")).to.eql "'test"

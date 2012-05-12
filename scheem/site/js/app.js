@@ -4,10 +4,12 @@
 
     try {
       var result = scheem.evalScheem(code);
-      $('#results').addClass('alert-success').removeClass('alert-error').html(result || "nil");
+      var resultStr = scheem.print(result);
+      $('#results').addClass('alert-success').removeClass('alert-error').html(resultStr);
     } catch (e) {
       $('#results').addClass('alert-error').removeClass('alert-success').html(e.message);
       window.lastError = e;
+      throw(e);
     }
   };
   

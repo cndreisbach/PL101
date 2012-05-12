@@ -1,27 +1,13 @@
-var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, reduce, update, _,
+var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
   __slice = [].slice;
 
 Parser = require("./scheem-parser").parser;
 
+ScheemError = require("./scheem/error");
+
+print = require("./scheem/print");
+
 _ = require("underscore");
-
-ScheemError = (function() {
-
-  ScheemError.name = 'ScheemError';
-
-  function ScheemError(message, lineno) {
-    this.message = message;
-    this.lineno = lineno;
-    this.name = "ScheemError";
-  }
-
-  ScheemError.prototype.toString = function() {
-    return "" + this.name + ": " + this.message;
-  };
-
-  return ScheemError;
-
-})();
 
 Guard = {
   getClass: function(object) {
@@ -312,6 +298,11 @@ primitives = {
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(1, args).expectList(args[0]);
     return args[0].slice(1);
+  },
+  list: function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    return args;
   }
 };
 
@@ -365,5 +356,6 @@ evalAST = function(expr, env) {
 module.exports = {
   Error: ScheemError,
   Parser: Parser,
+  print: print,
   evalScheem: evalScheem
 };

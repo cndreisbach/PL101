@@ -16,7 +16,9 @@ module.exports = function(grunt) {
           bare: true
         },
         files: {
-          'lib/scheem.js': ['lib/scheem.coffee']
+          'lib/scheem.js': ['lib/scheem.coffee'],
+          'lib/scheem/error.js': ['lib/scheem/error.coffee'],
+          'lib/scheem/print.js': ['lib/scheem/print.coffee']          
         }
       }
     },
@@ -97,6 +99,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', 'build-parser coffee lint exec:mocha');
   grunt.registerTask('site', 'browserify concat cssmin');
+  grunt.registerTask('all', 'test site');
 
   // Default task.
   grunt.registerTask('default', 'test');
