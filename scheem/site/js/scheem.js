@@ -345,7 +345,7 @@ exports.extname = function(path) {
 });
 
 require.define("/lib/scheem.js", function (require, module, exports, __dirname, __filename) {
-var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
+var Guard, Parser, ScheemError, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
   __slice = [].slice;
 
 Parser = require("./scheem-parser").parser;
@@ -423,14 +423,6 @@ update = function(env, sym, val) {
   }
 };
 
-bool = function(bool) {
-  if (bool) {
-    return "#t";
-  } else {
-    return "#f";
-  }
-};
-
 map = function(fn, coll) {
   var thing, _i, _len, _results;
   _results = [];
@@ -468,7 +460,7 @@ forms = {
   },
   "if": function(expr, env) {
     Guard.expectMinCount(2, expr.slice(1)).expectMaxCount(3, expr.slice(1));
-    if (evalAST(expr[1], env) !== "#f") {
+    if (evalAST(expr[1], env) === true) {
       return evalAST(expr[2], env);
     } else if (expr[3] != null) {
       return evalAST(expr[3], env);
@@ -560,7 +552,7 @@ primitives = {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(1, args);
-    return bool(args[0].length === 0);
+    return args[0].length === 0;
   },
   "+": function() {
     var args;
@@ -602,31 +594,31 @@ primitives = {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] === args[1]);
+    return args[0] === args[1];
   },
   "<": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] < args[1]);
+    return args[0] < args[1];
   },
   "<=": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] <= args[1]);
+    return args[0] <= args[1];
   },
   ">": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] > args[1]);
+    return args[0] > args[1];
   },
   ">=": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] >= args[1]);
+    return args[0] >= args[1];
   },
   cons: function() {
     var args;
@@ -756,6 +748,7 @@ Scheem.parser = (function(){
         "expression": parse_expression,
         "quoted_expression": parse_quoted_expression,
         "number": parse_number,
+        "boolean": parse_boolean,
         "valid_char": parse_valid_char,
         "comment": parse_comment,
         "newline": parse_newline,
@@ -915,16 +908,7 @@ Scheem.parser = (function(){
         if (result0 === null) {
           pos0 = clone(pos);
           pos1 = clone(pos);
-          result1 = parse_valid_char();
-          if (result1 !== null) {
-            result0 = [];
-            while (result1 !== null) {
-              result0.push(result1);
-              result1 = parse_valid_char();
-            }
-          } else {
-            result0 = null;
-          }
+          result0 = parse_boolean();
           if (result0 !== null) {
             result1 = parse__();
             if (result1 !== null) {
@@ -938,10 +922,42 @@ Scheem.parser = (function(){
             pos = clone(pos1);
           }
           if (result0 !== null) {
-            result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+            result0 = (function(offset, line, column, boolean) { return boolean; })(pos0.offset, pos0.line, pos0.column, result0[0]);
           }
           if (result0 === null) {
             pos = clone(pos0);
+          }
+          if (result0 === null) {
+            pos0 = clone(pos);
+            pos1 = clone(pos);
+            result1 = parse_valid_char();
+            if (result1 !== null) {
+              result0 = [];
+              while (result1 !== null) {
+                result0.push(result1);
+                result1 = parse_valid_char();
+              }
+            } else {
+              result0 = null;
+            }
+            if (result0 !== null) {
+              result1 = parse__();
+              if (result1 !== null) {
+                result0 = [result0, result1];
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+            if (result0 !== null) {
+              result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+            }
+            if (result0 === null) {
+              pos = clone(pos0);
+            }
           }
         }
         return result0;
@@ -1051,38 +1067,104 @@ Scheem.parser = (function(){
       }
       
       function parse_number() {
-        var result0, result1;
-        var pos0;
+        var result0, result1, result2;
+        var pos0, pos1;
         
         pos0 = clone(pos);
-        if (/^[0-9]/.test(input.charAt(pos.offset))) {
-          result1 = input.charAt(pos.offset);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 45) {
+          result0 = "-";
           advance(pos, 1);
         } else {
-          result1 = null;
+          result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[0-9]");
+            matchFailed("\"-\"");
           }
         }
-        if (result1 !== null) {
-          result0 = [];
-          while (result1 !== null) {
-            result0.push(result1);
-            if (/^[0-9]/.test(input.charAt(pos.offset))) {
-              result1 = input.charAt(pos.offset);
-              advance(pos, 1);
-            } else {
-              result1 = null;
-              if (reportFailures === 0) {
-                matchFailed("[0-9]");
+        result0 = result0 !== null ? result0 : "";
+        if (result0 !== null) {
+          if (/^[0-9]/.test(input.charAt(pos.offset))) {
+            result2 = input.charAt(pos.offset);
+            advance(pos, 1);
+          } else {
+            result2 = null;
+            if (reportFailures === 0) {
+              matchFailed("[0-9]");
+            }
+          }
+          if (result2 !== null) {
+            result1 = [];
+            while (result2 !== null) {
+              result1.push(result2);
+              if (/^[0-9]/.test(input.charAt(pos.offset))) {
+                result2 = input.charAt(pos.offset);
+                advance(pos, 1);
+              } else {
+                result2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("[0-9]");
+                }
               }
             }
+          } else {
+            result1 = null;
+          }
+          if (result1 !== null) {
+            result0 = [result0, result1];
+          } else {
+            result0 = null;
+            pos = clone(pos1);
           }
         } else {
           result0 = null;
+          pos = clone(pos1);
         }
         if (result0 !== null) {
-          result0 = (function(offset, line, column, number) { return parseInt(number.join("")); })(pos0.offset, pos0.line, pos0.column, result0);
+          result0 = (function(offset, line, column, negative, number) { return parseInt(negative + number.join("")); })(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        return result0;
+      }
+      
+      function parse_boolean() {
+        var result0, result1;
+        var pos0, pos1;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 35) {
+          result0 = "#";
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"#\"");
+          }
+        }
+        if (result0 !== null) {
+          if (/^[tf]/.test(input.charAt(pos.offset))) {
+            result1 = input.charAt(pos.offset);
+            advance(pos, 1);
+          } else {
+            result1 = null;
+            if (reportFailures === 0) {
+              matchFailed("[tf]");
+            }
+          }
+          if (result1 !== null) {
+            result0 = [result0, result1];
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, tf) { return (tf == 't'); })(pos0.offset, pos0.line, pos0.column, result0[1]);
         }
         if (result0 === null) {
           pos = clone(pos0);

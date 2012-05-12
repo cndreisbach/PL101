@@ -43,5 +43,14 @@ describe('The Scheem parser', function() {
   it("should handle atoms with dashes", function() {
     parse("(test-word)").should.eql(["test-word"]);
   });
+
+  it("should handle true and false", function() {
+    parse("#t").should.eql(true);
+    parse("#f").should.eql(false);
+  });
+
+  it("should handle negative numbers", function() {
+    parse("-15").should.eql(-15);
+  });
 });
 

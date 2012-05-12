@@ -7,6 +7,7 @@ form =
     
 atom
   = number:number _ { return number; }
+  / boolean:boolean _ { return boolean; }
   / chars:valid_char+ _ { return chars.join(""); }
         
 expression =
@@ -18,7 +19,10 @@ quoted_expression =
     { return ["quote", form]; }
 
 number
-  = number:[0-9]+ { return parseInt(number.join("")); }
+  = negative:'-'? number:[0-9]+ { return parseInt(negative + number.join("")); }
+
+boolean
+  = '#' tf:[tf] { return (tf == 't'); }
     
 valid_char = 
   [0-9a-zA-Z_?!+><=@#$%^&*/\.\-]

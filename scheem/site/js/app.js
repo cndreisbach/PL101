@@ -9,7 +9,6 @@
     } catch (e) {
       $('#results').addClass('alert-error').removeClass('alert-success').html(e.message);
       window.lastError = e;
-      throw(e);
     }
   };
   

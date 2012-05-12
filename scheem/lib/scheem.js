@@ -1,4 +1,4 @@
-var Guard, Parser, ScheemError, bool, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
+var Guard, Parser, ScheemError, define, evalAST, evalScheem, forms, initialEnv, isA, isFunction, isNumber, isString, lookup, map, primitives, print, reduce, update, _,
   __slice = [].slice;
 
 Parser = require("./scheem-parser").parser;
@@ -76,14 +76,6 @@ update = function(env, sym, val) {
   }
 };
 
-bool = function(bool) {
-  if (bool) {
-    return "#t";
-  } else {
-    return "#f";
-  }
-};
-
 map = function(fn, coll) {
   var thing, _i, _len, _results;
   _results = [];
@@ -121,7 +113,7 @@ forms = {
   },
   "if": function(expr, env) {
     Guard.expectMinCount(2, expr.slice(1)).expectMaxCount(3, expr.slice(1));
-    if (evalAST(expr[1], env) !== "#f") {
+    if (evalAST(expr[1], env) === true) {
       return evalAST(expr[2], env);
     } else if (expr[3] != null) {
       return evalAST(expr[3], env);
@@ -213,7 +205,7 @@ primitives = {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(1, args);
-    return bool(args[0].length === 0);
+    return args[0].length === 0;
   },
   "+": function() {
     var args;
@@ -255,31 +247,31 @@ primitives = {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] === args[1]);
+    return args[0] === args[1];
   },
   "<": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] < args[1]);
+    return args[0] < args[1];
   },
   "<=": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] <= args[1]);
+    return args[0] <= args[1];
   },
   ">": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] > args[1]);
+    return args[0] > args[1];
   },
   ">=": function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     Guard.expectCount(2, args);
-    return bool(args[0] >= args[1]);
+    return args[0] >= args[1];
   },
   cons: function() {
     var args;

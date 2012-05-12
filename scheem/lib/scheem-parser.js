@@ -44,6 +44,7 @@ Scheem.parser = (function(){
         "expression": parse_expression,
         "quoted_expression": parse_quoted_expression,
         "number": parse_number,
+        "boolean": parse_boolean,
         "valid_char": parse_valid_char,
         "comment": parse_comment,
         "newline": parse_newline,
@@ -203,16 +204,7 @@ Scheem.parser = (function(){
         if (result0 === null) {
           pos0 = clone(pos);
           pos1 = clone(pos);
-          result1 = parse_valid_char();
-          if (result1 !== null) {
-            result0 = [];
-            while (result1 !== null) {
-              result0.push(result1);
-              result1 = parse_valid_char();
-            }
-          } else {
-            result0 = null;
-          }
+          result0 = parse_boolean();
           if (result0 !== null) {
             result1 = parse__();
             if (result1 !== null) {
@@ -226,10 +218,42 @@ Scheem.parser = (function(){
             pos = clone(pos1);
           }
           if (result0 !== null) {
-            result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+            result0 = (function(offset, line, column, boolean) { return boolean; })(pos0.offset, pos0.line, pos0.column, result0[0]);
           }
           if (result0 === null) {
             pos = clone(pos0);
+          }
+          if (result0 === null) {
+            pos0 = clone(pos);
+            pos1 = clone(pos);
+            result1 = parse_valid_char();
+            if (result1 !== null) {
+              result0 = [];
+              while (result1 !== null) {
+                result0.push(result1);
+                result1 = parse_valid_char();
+              }
+            } else {
+              result0 = null;
+            }
+            if (result0 !== null) {
+              result1 = parse__();
+              if (result1 !== null) {
+                result0 = [result0, result1];
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+            if (result0 !== null) {
+              result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+            }
+            if (result0 === null) {
+              pos = clone(pos0);
+            }
           }
         }
         return result0;
@@ -339,38 +363,104 @@ Scheem.parser = (function(){
       }
       
       function parse_number() {
-        var result0, result1;
-        var pos0;
+        var result0, result1, result2;
+        var pos0, pos1;
         
         pos0 = clone(pos);
-        if (/^[0-9]/.test(input.charAt(pos.offset))) {
-          result1 = input.charAt(pos.offset);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 45) {
+          result0 = "-";
           advance(pos, 1);
         } else {
-          result1 = null;
+          result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[0-9]");
+            matchFailed("\"-\"");
           }
         }
-        if (result1 !== null) {
-          result0 = [];
-          while (result1 !== null) {
-            result0.push(result1);
-            if (/^[0-9]/.test(input.charAt(pos.offset))) {
-              result1 = input.charAt(pos.offset);
-              advance(pos, 1);
-            } else {
-              result1 = null;
-              if (reportFailures === 0) {
-                matchFailed("[0-9]");
+        result0 = result0 !== null ? result0 : "";
+        if (result0 !== null) {
+          if (/^[0-9]/.test(input.charAt(pos.offset))) {
+            result2 = input.charAt(pos.offset);
+            advance(pos, 1);
+          } else {
+            result2 = null;
+            if (reportFailures === 0) {
+              matchFailed("[0-9]");
+            }
+          }
+          if (result2 !== null) {
+            result1 = [];
+            while (result2 !== null) {
+              result1.push(result2);
+              if (/^[0-9]/.test(input.charAt(pos.offset))) {
+                result2 = input.charAt(pos.offset);
+                advance(pos, 1);
+              } else {
+                result2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("[0-9]");
+                }
               }
             }
+          } else {
+            result1 = null;
+          }
+          if (result1 !== null) {
+            result0 = [result0, result1];
+          } else {
+            result0 = null;
+            pos = clone(pos1);
           }
         } else {
           result0 = null;
+          pos = clone(pos1);
         }
         if (result0 !== null) {
-          result0 = (function(offset, line, column, number) { return parseInt(number.join("")); })(pos0.offset, pos0.line, pos0.column, result0);
+          result0 = (function(offset, line, column, negative, number) { return parseInt(negative + number.join("")); })(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        return result0;
+      }
+      
+      function parse_boolean() {
+        var result0, result1;
+        var pos0, pos1;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 35) {
+          result0 = "#";
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"#\"");
+          }
+        }
+        if (result0 !== null) {
+          if (/^[tf]/.test(input.charAt(pos.offset))) {
+            result1 = input.charAt(pos.offset);
+            advance(pos, 1);
+          } else {
+            result1 = null;
+            if (reportFailures === 0) {
+              matchFailed("[tf]");
+            }
+          }
+          if (result1 !== null) {
+            result0 = [result0, result1];
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, tf) { return (tf == 't'); })(pos0.offset, pos0.line, pos0.column, result0[1]);
         }
         if (result0 === null) {
           pos = clone(pos0);

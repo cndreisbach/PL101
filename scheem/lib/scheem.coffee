@@ -54,9 +54,6 @@ update = (env, sym, val) ->
   else
     throw new ScheemError("Attempt to update uninitialized var #{sym}.")
 
-bool = (bool) ->
-  (if bool then "#t" else "#f")
-
 map = (fn, coll) ->
   fn(thing) for thing in coll
 
@@ -77,7 +74,7 @@ forms =
 
   if: (expr, env) ->
     Guard.expectMinCount(2, expr[1..]).expectMaxCount 3, expr[1..]
-    if evalAST(expr[1], env) isnt "#f"
+    if evalAST(expr[1], env) is true
       evalAST expr[2], env
     else if expr[3]?
       evalAST expr[3], env
@@ -137,7 +134,7 @@ primitives =
 
   "empty?": (args...) ->
     Guard.expectCount 1, args
-    bool(args[0].length is 0)
+    args[0].length is 0
 
   "+": (args...) ->
     Guard.expectMinCount 1, args
@@ -168,23 +165,23 @@ primitives =
 
   "=": (args...) ->
     Guard.expectCount 2, args
-    bool(args[0] is args[1])
+    args[0] is args[1]
 
   "<": (args...) ->
     Guard.expectCount 2, args
-    bool(args[0] < args[1])
+    args[0] < args[1]
 
   "<=": (args...) ->
     Guard.expectCount 2, args
-    bool(args[0] <= args[1])
+    args[0] <= args[1]
 
   ">": (args...) ->
     Guard.expectCount 2, args
-    bool (args[0] > args[1])
+    args[0] > args[1]
 
   ">=": (args...) ->
     Guard.expectCount 2, args
-    bool (args[0] >= args[1])
+    args[0] >= args[1]
 
   cons: (args...) ->
     Guard.expectCount(2, args).expectList args[1]

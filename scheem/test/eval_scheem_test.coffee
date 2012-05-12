@@ -111,10 +111,10 @@ describe "The Scheem interpreter", ->
     expect(evalScheem("(- 3)")).to.equal -3
 
   it "should evaluate math conditionals", ->
-    expect(evalScheem("(< 2 3)")).to.equal "#t"
-    expect(evalScheem("(= 7 3)")).to.equal "#f"
-    expect(evalScheem("(> 3 4)")).to.equal "#f"
-    expect(evalScheem("(>= 6 6)")).to.equal "#t"
+    expect(evalScheem("(< 2 3)")).to.equal true
+    expect(evalScheem("(= 7 3)")).to.equal false
+    expect(evalScheem("(> 3 4)")).to.equal false
+    expect(evalScheem("(>= 6 6)")).to.equal true
 
   it "should handle let", ->
     expect(evalScheem("
