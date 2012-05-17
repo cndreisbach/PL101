@@ -45,6 +45,8 @@ Scheem.parser = (function(){
         "quoted_expression": parse_quoted_expression,
         "number": parse_number,
         "boolean": parse_boolean,
+        "string": parse_string,
+        "string_char": parse_string_char,
         "valid_char": parse_valid_char,
         "comment": parse_comment,
         "newline": parse_newline,
@@ -226,16 +228,7 @@ Scheem.parser = (function(){
           if (result0 === null) {
             pos0 = clone(pos);
             pos1 = clone(pos);
-            result1 = parse_valid_char();
-            if (result1 !== null) {
-              result0 = [];
-              while (result1 !== null) {
-                result0.push(result1);
-                result1 = parse_valid_char();
-              }
-            } else {
-              result0 = null;
-            }
+            result0 = parse_string();
             if (result0 !== null) {
               result1 = parse__();
               if (result1 !== null) {
@@ -249,10 +242,42 @@ Scheem.parser = (function(){
               pos = clone(pos1);
             }
             if (result0 !== null) {
-              result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+              result0 = (function(offset, line, column, string) { return string; })(pos0.offset, pos0.line, pos0.column, result0[0]);
             }
             if (result0 === null) {
               pos = clone(pos0);
+            }
+            if (result0 === null) {
+              pos0 = clone(pos);
+              pos1 = clone(pos);
+              result1 = parse_valid_char();
+              if (result1 !== null) {
+                result0 = [];
+                while (result1 !== null) {
+                  result0.push(result1);
+                  result1 = parse_valid_char();
+                }
+              } else {
+                result0 = null;
+              }
+              if (result0 !== null) {
+                result1 = parse__();
+                if (result1 !== null) {
+                  result0 = [result0, result1];
+                } else {
+                  result0 = null;
+                  pos = clone(pos1);
+                }
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+              if (result0 !== null) {
+                result0 = (function(offset, line, column, chars) { return chars.join(""); })(pos0.offset, pos0.line, pos0.column, result0[0]);
+              }
+              if (result0 === null) {
+                pos = clone(pos0);
+              }
             }
           }
         }
@@ -464,6 +489,116 @@ Scheem.parser = (function(){
         }
         if (result0 === null) {
           pos = clone(pos0);
+        }
+        return result0;
+      }
+      
+      function parse_string() {
+        var result0, result1, result2;
+        var pos0, pos1;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 34) {
+          result0 = "\"";
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"\\\"\"");
+          }
+        }
+        if (result0 !== null) {
+          result1 = [];
+          result2 = parse_string_char();
+          while (result2 !== null) {
+            result1.push(result2);
+            result2 = parse_string_char();
+          }
+          if (result1 !== null) {
+            if (input.charCodeAt(pos.offset) === 34) {
+              result2 = "\"";
+              advance(pos, 1);
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\"\"");
+              }
+            }
+            if (result2 !== null) {
+              result0 = [result0, result1, result2];
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, string) { return string.join(""); })(pos0.offset, pos0.line, pos0.column, result0[1]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        return result0;
+      }
+      
+      function parse_string_char() {
+        var result0, result1;
+        var pos0, pos1;
+        
+        if (/^[^\\"]/.test(input.charAt(pos.offset))) {
+          result0 = input.charAt(pos.offset);
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("[^\\\\\"]");
+          }
+        }
+        if (result0 === null) {
+          pos0 = clone(pos);
+          pos1 = clone(pos);
+          if (input.charCodeAt(pos.offset) === 92) {
+            result0 = "\\";
+            advance(pos, 1);
+          } else {
+            result0 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"\\\\\"");
+            }
+          }
+          if (result0 !== null) {
+            if (input.length > pos.offset) {
+              result1 = input.charAt(pos.offset);
+              advance(pos, 1);
+            } else {
+              result1 = null;
+              if (reportFailures === 0) {
+                matchFailed("any character");
+              }
+            }
+            if (result1 !== null) {
+              result0 = [result0, result1];
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+          if (result0 !== null) {
+            result0 = (function(offset, line, column, char) { return char; })(pos0.offset, pos0.line, pos0.column, result0[1]);
+          }
+          if (result0 === null) {
+            pos = clone(pos0);
+          }
         }
         return result0;
       }

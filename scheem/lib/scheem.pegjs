@@ -8,6 +8,7 @@ form =
 atom
   = number:number _ { return number; }
   / boolean:boolean _ { return boolean; }
+  / string:string _ { return string; }
   / chars:valid_char+ _ { return chars.join(""); }
         
 expression =
@@ -23,7 +24,17 @@ number
 
 boolean
   = '#' tf:[tf] { return (tf == 't'); }
-    
+
+string
+  = '"' string:string_char* '"' { return string.join(""); }
+
+string_char
+  = [^\\"]
+  / "\\t" { return "\t"; }
+  / "\\r" { return "\r"; }
+  / "\\n" { return "\n"; }
+  / "\\" char:. { return char; }
+  
 valid_char = 
   [0-9a-zA-Z_?!+><=@#$%^&*/\.\-]
 

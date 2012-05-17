@@ -52,5 +52,13 @@ describe('The Scheem parser', function() {
   it("should handle negative numbers", function() {
     parse("-15").should.eql(-15);
   });
+
+  it("should handle strings", function() {
+    parse("\"hello world\"").should.eql("hello world");
+  });
+
+  it("should handle strings with embedded quotes", function() {
+    parse("\"hello \\\"world\\\"\"").should.eql("hello \"world\"");
+  });
 });
 
