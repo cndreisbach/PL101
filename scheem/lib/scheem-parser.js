@@ -563,41 +563,95 @@ Scheem.parser = (function(){
         }
         if (result0 === null) {
           pos0 = clone(pos);
-          pos1 = clone(pos);
-          if (input.charCodeAt(pos.offset) === 92) {
-            result0 = "\\";
-            advance(pos, 1);
+          if (input.substr(pos.offset, 2) === "\\t") {
+            result0 = "\\t";
+            advance(pos, 2);
           } else {
             result0 = null;
             if (reportFailures === 0) {
-              matchFailed("\"\\\\\"");
+              matchFailed("\"\\\\t\"");
             }
           }
           if (result0 !== null) {
-            if (input.length > pos.offset) {
-              result1 = input.charAt(pos.offset);
-              advance(pos, 1);
-            } else {
-              result1 = null;
-              if (reportFailures === 0) {
-                matchFailed("any character");
-              }
-            }
-            if (result1 !== null) {
-              result0 = [result0, result1];
-            } else {
-              result0 = null;
-              pos = clone(pos1);
-            }
-          } else {
-            result0 = null;
-            pos = clone(pos1);
-          }
-          if (result0 !== null) {
-            result0 = (function(offset, line, column, char) { return char; })(pos0.offset, pos0.line, pos0.column, result0[1]);
+            result0 = (function(offset, line, column) { return "\t"; })(pos0.offset, pos0.line, pos0.column);
           }
           if (result0 === null) {
             pos = clone(pos0);
+          }
+          if (result0 === null) {
+            pos0 = clone(pos);
+            if (input.substr(pos.offset, 2) === "\\r") {
+              result0 = "\\r";
+              advance(pos, 2);
+            } else {
+              result0 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\\r\"");
+              }
+            }
+            if (result0 !== null) {
+              result0 = (function(offset, line, column) { return "\r"; })(pos0.offset, pos0.line, pos0.column);
+            }
+            if (result0 === null) {
+              pos = clone(pos0);
+            }
+            if (result0 === null) {
+              pos0 = clone(pos);
+              if (input.substr(pos.offset, 2) === "\\n") {
+                result0 = "\\n";
+                advance(pos, 2);
+              } else {
+                result0 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"\\\\n\"");
+                }
+              }
+              if (result0 !== null) {
+                result0 = (function(offset, line, column) { return "\n"; })(pos0.offset, pos0.line, pos0.column);
+              }
+              if (result0 === null) {
+                pos = clone(pos0);
+              }
+              if (result0 === null) {
+                pos0 = clone(pos);
+                pos1 = clone(pos);
+                if (input.charCodeAt(pos.offset) === 92) {
+                  result0 = "\\";
+                  advance(pos, 1);
+                } else {
+                  result0 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\"\\\\\"");
+                  }
+                }
+                if (result0 !== null) {
+                  if (input.length > pos.offset) {
+                    result1 = input.charAt(pos.offset);
+                    advance(pos, 1);
+                  } else {
+                    result1 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("any character");
+                    }
+                  }
+                  if (result1 !== null) {
+                    result0 = [result0, result1];
+                  } else {
+                    result0 = null;
+                    pos = clone(pos1);
+                  }
+                } else {
+                  result0 = null;
+                  pos = clone(pos1);
+                }
+                if (result0 !== null) {
+                  result0 = (function(offset, line, column, char) { return char; })(pos0.offset, pos0.line, pos0.column, result0[1]);
+                }
+                if (result0 === null) {
+                  pos = clone(pos0);
+                }
+              }
+            }
           }
         }
         return result0;
