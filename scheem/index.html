@@ -12,24 +12,44 @@
       <div class="row">
         <div class="span6">
           <textarea id="scheem-editor"></textarea>
-        </div>
-        <div class="span6">
           <div id="results" class="alert">
             Start writing Scheem code and your results will appear here!
           </div>
+        </div>
+        <div class="span6">
+          <ul class="nav nav-pills">
+            <li class="active">
+              <a href="#instructions" data-toggle="tab">Instructions</a>
+            </li>
+            <li>
+              <a href="#links" data-toggle="tab">Links</a>
+            </li>
+          </ul>
           <div class="well">
-            <h2 id="scheem">Scheem</h2>
-            <p>Scheem is a very simple language, based on the larger language <a href="http://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;ved=0CI0BEBYwAA&amp;url=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2FScheme_(programming_language)&amp;ei=VXGkT-OjLpK5twetjf33BA&amp;usg=AFQjCNG6as-MXMg4OaIrViplS9oel6w1Qw&amp;sig2=JCWLBGed3ImH2H1yiN0gKw">Scheme</a>.</p>
-            <p>Enter any Scheem code in the editor to the left and it will be immediately evaluated. If you would like to see some examples of Scheem code to start with, click any of the following:</p>
-            <ul>
-              <li><a href="#" class="example-link" rel="addition-example">Simple addition</a></li>
-              <li><a href="#" class="example-link" rel="math-example">More complex math</a></li>
-              <li><a href="#" class="example-link" rel="vars-example">Programming with vars</a></li>
-              <li><a href="#" class="example-link" rel="branching-example">Branching with <code>if</code></a></li>
-              <li><a href="#" class="example-link" rel="let-example">Creating scopes with <code>let</code></li>
-              <li><a href="#" class="example-link" rel="lambda-example">Creating functions with <code>lambda</code></a></li>
-              <li><a href="#" class="example-link" rel="advanced-lambda-example">Functions that take other functions as arguments</a></li>
-            </ul>
+            <div class="tab-content">
+              <div class="tab-pane active" id="instructions">
+                <h2 id="scheem">Scheem</h2>
+                <p>Scheem is a very simple language, based on the larger language <a href="http://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;ved=0CI0BEBYwAA&amp;url=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2FScheme_(programming_language)&amp;ei=VXGkT-OjLpK5twetjf33BA&amp;usg=AFQjCNG6as-MXMg4OaIrViplS9oel6w1Qw&amp;sig2=JCWLBGed3ImH2H1yiN0gKw">Scheme</a>.</p>
+                <p>Enter any Scheem code in the editor to the left and it will be immediately evaluated. If you would like to see some examples of Scheem code to start with, click any of the following:</p>
+                <ul>
+                  <li><a href="#" class="example-link" rel="addition-example">Simple addition</a></li>
+                  <li><a href="#" class="example-link" rel="math-example">More complex math</a></li>
+                  <li><a href="#" class="example-link" rel="vars-example">Programming with vars</a></li>
+                  <li><a href="#" class="example-link" rel="branching-example">Branching with <code>if</code></a></li>
+                  <li><a href="#" class="example-link" rel="let-example">Creating scopes with <code>let</code></li>
+                  <li><a href="#" class="example-link" rel="lambda-example">Creating functions with <code>lambda</code></a></li>
+                  <li><a href="#" class="example-link" rel="advanced-lambda-example">Functions that take other functions as arguments</a></li>
+                </ul>
+              </div>
+              <div class="tab-pane" id="links">
+                <h2>Links</h2>
+                <ul>
+                  <li>
+                    <a href="https://github.com/crnixon/PL101/tree/master/scheem">All the code</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
